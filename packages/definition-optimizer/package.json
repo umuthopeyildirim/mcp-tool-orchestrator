@@ -1,0 +1,35 @@
+{
+  "name": "@umuthopeyildirim/mcp-tool-definition-optimizer",
+  "version": "0.0.1",
+  "description": "MCP Tool Operator for definition optimizer",
+  "license": "MIT",
+  "author": "Umut Hope Yildirim",
+  "homepage": "https://github.com/umuthopeyildirim/mcp-tool-definition-optimizer",
+  "bugs": "https://github.com/umuthopeyildirim/mcp-tool-definition-optimizer/issues",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "bin": {
+    "mcp-tool-definition-optimizer": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.14.0",
+    "@google/generative-ai": "^0.2.1",
+    "@modelcontextprotocol/sdk": "1.11.4",
+    "openai": "^4.28.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
+}

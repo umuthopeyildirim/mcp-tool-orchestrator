@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "generate:cache-key": {
+      "cache": false,
+      "dependsOn": ["^generate:cache-key"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

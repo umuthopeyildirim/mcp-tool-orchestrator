@@ -1,0 +1,39 @@
+{
+    "name": "@umuthopeyildirim/mcp-tool-orchestrator-filesystem-demo",
+    "version": "0.0.1",
+    "description": "MCP Tool Operator demo for filesystem MCP Server",
+    "license": "MIT",
+    "author": "Umut Hope Yildirim",
+    "homepage": "https://github.com/umuthopeyildirim/mcp-tool-orchestrator-filesystem-demo",
+    "bugs": "https://github.com/umuthopeyildirim/mcp-tool-orchestrator-filesystem-demo/issues",
+    "type": "module",
+    "bin": {
+        "mcp-tool-orchestrator-filesystem-demo": "dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "optimize-tools": "node scripts/optimize-tools.js",
+        "build": "tsc && shx chmod +x dist/*.js && pnpm run optimize-tools",
+        "prepare": "npm run build",
+        "watch": "tsc --watch"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "1.11.4",
+        "@umuthopeyildirim/mcp-tool-definition-optimizer": "workspace:*",
+        "diff": "^8.0.1",
+        "glob": "^11.0.2",
+        "minimatch": "^10.0.1",
+        "zod": "^3.24.4",
+        "zod-to-json-schema": "^3.24.5"
+    },
+    "devDependencies": {
+        "@types/diff": "^8.0.0",
+        "@types/minimatch": "^5.1.2",
+        "@types/node": "^22",
+        "shx": "^0.4.0",
+        "typescript": "^5.8.3"
+    },
+    "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
+}
