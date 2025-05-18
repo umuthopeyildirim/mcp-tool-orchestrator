@@ -1,0 +1,54 @@
+[
+  // OG File
+  {
+    "name": "edit_file",
+    "description": "Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  // Optimized File
+  {
+    "name": "edit_file",
+    "description": "# edit_file\n\nMakes precise line-by-line edits to text files by replacing exact text sequences with new content. Each edit operation searches for the exact oldText (including whitespace and indentation) and replaces it with newText. The tool returns a git-style diff showing additions and deletions, with added lines prefixed with '+' and removed lines with '-'.\n\n## When to use\n- Updating configuration values in text files\n- Modifying code (changing function signatures, fixing bugs, refactoring)  \n- Updating text content (fixing typos, updating copyright notices in individual files)\n- Making consistent changes across a file\n\n## Limitations and cautions\n- Only works in project-specific directories (src/, config/, etc. - not system directories)\n- Matches text exactly, including whitespace and indentation\n- If oldText appears multiple times, all instances will be replaced\n- Edits are applied sequentially in the order provided\n- No regex/pattern support - only exact string matching\n- Make backups of important files before editing\n- Large files may cause performance issues\n- Different line endings (CRLF vs LF) may affect matching\n- Does not work on binary files\n\n## Parameters\n- `path`: Path to the file to edit (relative to project root)\n- `edits`: Array of edit operations, each containing:\n  - `oldText`: Exact text to replace (must match precisely)\n  - `newText`: New text to insert instead\n- `dryRun`: Set to true to preview changes without modifying the file (defaults to false)",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "oldText": {
+                "type": "string",
+                "description": "Text to search for - must match exactly"
+              },
+              "newText": {
+                "type": "string",
+                "description": "Text to replace with"
+              }
+            },
+            "required": ["oldText", "newText"],
+            "additionalProperties": false
+          }
+        },
+        "dryRun": {
+          "type": "boolean",
+          "default": false,
+          "description": "Preview changes using git-style diff format"
+        }
+      },
+      "required": ["path", "edits"],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+]

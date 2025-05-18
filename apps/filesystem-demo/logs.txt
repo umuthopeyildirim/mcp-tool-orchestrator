@@ -1,0 +1,263 @@
+hope@Umuts-Work-MacBook-Pro filesystem-demo % pnpm build
+
+> @umuthopeyildirim/mcp-tool-orchestrator-filesystem-demo@0.0.1 build /Users/hope/Desktop/Projects/mcp-tool-operator/apps/filesystem-demo
+> tsc && shx chmod +x dist/*.js && pnpm run optimize-tools
+
+
+> @umuthopeyildirim/mcp-tool-orchestrator-filesystem-demo@0.0.1 optimize-tools /Users/hope/Desktop/Projects/mcp-tool-operator/apps/filesystem-demo
+> node scripts/optimize-tools.js
+
+Starting tool definition optimization...
+API Keys { openai: true, anthropic: true, google: true }
+Optimizing tool definition {
+  name: 'read_file',
+  description: 'Read the complete contents of a file from the file system. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object] },
+    required: [ 'path' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  "I need to check the content of my project's configuration file at config/settings.json to debug an error",
+  "Could you show me what's in the README.md file? I forgot the installation instructions",
+  "Please read my large log file at /var/log/system.log to help me find what's causing the crash",
+  'Can you open my résumé.pdf and tell me if the formatting looks correct?',
+  "I'm trying to access /etc/passwd but getting permission errors - can you read it for me?"
+]
+Evaluation iteration 1
+Passed 4 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'read_multiple_files',
+  description: "Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
+  inputSchema: {
+    type: 'object',
+    properties: { paths: [Object] },
+    required: [ 'paths' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to compare these three log files to identify any errors that occurred across all of them.',
+  'Can you read all my Python source files in the project directory so I can analyze code patterns?',
+  "I'd like to read both the original and edited versions of my essay to see what changes were made.",
+  'Please check these 15 configuration files across our servers to find inconsistencies in settings.',
+  'Could you read the README files from my five different repositories to help me summarize their installation instructions?'
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'write_file',
+  description: 'Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Handles text content with proper encoding. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object], content: [Object] },
+    required: [ 'path', 'content' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to save my meeting notes to a file called meeting_minutes.txt on my desktop.',
+  'Could you create a new config.json file with these API settings and save it to my project folder?',
+  'Please save this poem I wrote as poem.txt, making sure to preserve all the line breaks.',
+  'I need to overwrite my old resume.pdf with this updated version immediately.',
+  "Can you save this large dataset as data.csv in my Documents folder, even though there's already a file with that name?"
+]
+Evaluation iteration 1
+Passed 4 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'edit_file',
+  description: 'Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object], edits: [Object], dryRun: [Object] },
+    required: [ 'path', 'edits' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to update the API endpoint URLs in my config.json file from development to production.',
+  'Could you help me replace the copyright notice in all my source files to include the current year?',
+  'I want to preview what would happen if I changed the error message in my Python script without actually making the change.',
+  'Can you fix the typo in line 15 of my README.md where it says "instll" instead of "install"?',
+  'I need to update multiple function parameters in my JavaScript file - the old ones use callbacks but I want to use promises instead.'
+]
+Evaluation iteration 1
+Passed 0 out of 5 scenarios
+Evaluation iteration 2
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'create_directory',
+  description: 'Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object] },
+    required: [ 'path' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to create a new folder called "Project_Documents" to organize my work files.',
+  'Can you set up a nested directory structure for my photography project with folders for 2023/Summer/Vacation?',
+  `I'm trying to create a directory that already exists called "Downloads" - will this cause any errors?`,
+  'Please create a temp folder with a really long path like /home/user/documents/projects/2023/research/data/temp/processing/raw_files',
+  'I need to create multiple directories for my app: src/components, src/utils, and src/assets/images'
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'list_directory',
+  description: 'Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object] },
+    required: [ 'path' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to see what files are in my downloads folder.',
+  'Could you show me all the files and folders in the current directory?',
+  "What's inside the /var/log directory? I'm trying to find some system logs.",
+  'Can you list everything in my project folder including hidden files?',
+  'I need to check if my backup directory is empty or not.'
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'directory_tree',
+  description: "Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories.",
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object] },
+    required: [ 'path' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to get a tree view of my Documents folder to understand its structure.',
+  "Can you show me the directory structure of my project's src folder so I can explain it to my team?",
+  "What files are in my empty Downloads directory? I want to confirm it's actually empty.",
+  'Show me the directory tree for /etc/nginx/ so I can understand the configuration structure.',
+  'I need to see the structure of a deeply nested folder with many subfolders - can you map out /var/www/html?'
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'move_file',
+  description: 'Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Works across different directories and can be used for simple renaming within the same directory. Both source and destination must be within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { source: [Object], destination: [Object] },
+    required: [ 'source', 'destination' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to rename my presentation.pptx file to final_presentation.pptx in the same folder.',
+  'Can you move my project files from the Documents/old_project directory to Documents/new_project?',
+  "Please move my report.pdf from Downloads to the shared_files folder, but I'm not sure if a file with the same name already exists there.",
+  'I want to organize my photos by moving vacation_pics.zip from my desktop to Photos/Summer2023 folder while keeping the same filename.',
+  "Could you help me rename C:\\Program Files\\MyApp\\config.json to C:\\Program Files\\MyApp\\config_backup.json? I'm worried about permissions."
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'search_files',
+  description: "Recursively search for files and directories matching a pattern. Searches through all subdirectories from the starting path. The search is case-insensitive and matches partial names. Returns full paths to all matching items. Great for finding files when you don't know their exact location. Only searches within allowed directories.",
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object], pattern: [Object], excludePatterns: [Object] },
+    required: [ 'path', 'pattern' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to find all my budget spreadsheets somewhere in my Documents folder.',
+  'Can you search for any Python files in my project that contain "test" in the name, but ignore the virtual environment folder?',
+  `I accidentally saved an important PDF somewhere on my desktop but can't remember the exact name - I think it had "contract" in it.`,
+  'Help me locate all image files in my Photos directory from my vacation last year, excluding any thumbnail files.',
+  `I need to find a specific configuration file that ends with ".config" somewhere in my system files, but don't search in any "temp" directories.`
+]
+Evaluation iteration 1
+Passed 4 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'get_file_info',
+  description: 'Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. This tool is perfect for understanding file characteristics without reading the actual content. Only works within allowed directories.',
+  inputSchema: {
+    type: 'object',
+    properties: { path: [Object] },
+    required: [ 'path' ],
+    additionalProperties: false,
+    '$schema': 'http://json-schema.org/draft-07/schema#'
+  }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  "I need to check when my resume.pdf was last modified so I can make sure it's up to date.",
+  "Could you tell me how large my project folder is? I'm trying to see if it will fit on my USB drive.",
+  'What are the permissions on my config.json file? I think it might be causing access issues.',
+  "Is data.csv a file or a directory? I can't remember if I created a file or folder with that name.",
+  "Can you show me detailed information about /home/user/hidden_files/.secrets? I can't see it in my file explorer."
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Optimizing tool definition {
+  name: 'list_allowed_directories',
+  description: 'Returns the list of directories that this server is allowed to access. Use this to understand which directories are available before trying to access files.',
+  inputSchema: { type: 'object', properties: {}, required: [] }
+}
+Using provider: anthropic with model: claude-3-7-sonnet-20250219
+Generating test scenarios...
+Generated scenarios: [
+  'I need to see which directories are accessible before I upload my files.',
+  "Can you show me all the folders I'm allowed to work with on this server?",
+  'Before I start this project, I need to know what directories I can read from and write to.',
+  "I'm getting permission errors when accessing files - what directories am I actually allowed to use?",
+  'My application needs to store data somewhere on this server - what are my options?'
+]
+Evaluation iteration 1
+Passed 5 out of 5 scenarios
+Optimization successful
+Saved optimized tool definition to cache
+Optimized tool definitions written to /Users/hope/Desktop/Projects/mcp-tool-operator/apps/filesystem-demo/dist/optimized-tools.js
+hope@Umuts-Work-MacBook-Pro filesystem-demo % 
