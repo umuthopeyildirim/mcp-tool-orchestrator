@@ -11,7 +11,7 @@ import path from "path";
 import os from "os";
 import { createTwoFilesPatch } from "diff";
 import { minimatch } from "minimatch";
-import { tool_definations } from "./tools.js";
+import { old_tool_definations, tool_definations } from "./tools.js";
 import {
   ReadFileArgsSchema,
   ReadMultipleFilesArgsSchema,
@@ -26,6 +26,7 @@ import {
   GetFileInfoArgsSchema,
   InteractWithFileSystemArgsSchema,
 } from "./types.js";
+import { orchestrator } from "@umuthopeyildirim/orchestrator";
 
 // Command line argument parsing
 const args = process.argv.slice(2);
@@ -324,239 +325,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             `Invalid arguments for interact_with_file_system: ${parsed.error}`
           );
         }
-        let isDone = false;
-        while (!isDone) {
-          const 
-        }
-        return {
-          content: [{ type: "text", text: "Interacting with file system" }],
-        };
-      }
 
-      case "read_file": {
-        const parsed = ReadFileArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments for read_file: ${parsed.error}`);
-        }
-        const validPath = await validatePath(parsed.data.path);
-        const content = await fs.readFile(validPath, "utf-8");
-        return {
-          content: [{ type: "text", text: content }],
-        };
-      }
-
-      case "read_multiple_files": {
-        const parsed = ReadMultipleFilesArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for read_multiple_files: ${parsed.error}`
-          );
-        }
-        const results = await Promise.all(
-          parsed.data.paths.map(async (filePath: string) => {
-            try {
-              const validPath = await validatePath(filePath);
-              const content = await fs.readFile(validPath, "utf-8");
-              return `${filePath}:\n${content}\n`;
-            } catch (error) {
-              const errorMessage =
-                error instanceof Error ? error.message : String(error);
-              return `${filePath}: Error - ${errorMessage}`;
-            }
-          })
+        // Get the response from orchestrator
+        const response = await orchestrator(
+          tool_definations.tools[0],
+          old_tool_definations.tools
         );
-        return {
-          content: [{ type: "text", text: results.join("\n---\n") }],
-        };
-      }
 
-      case "write_file": {
-        const parsed = WriteFileArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments for write_file: ${parsed.error}`);
-        }
-        const validPath = await validatePath(parsed.data.path);
-        await fs.writeFile(validPath, parsed.data.content, "utf-8");
-        return {
-          content: [
-            { type: "text", text: `Successfully wrote to ${parsed.data.path}` },
-          ],
-        };
-      }
-
-      case "edit_file": {
-        const parsed = EditFileArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments for edit_file: ${parsed.error}`);
-        }
-        const validPath = await validatePath(parsed.data.path);
-        const result = await applyFileEdits(
-          validPath,
-          parsed.data.edits as Array<{ oldText: string; newText: string }>,
-          parsed.data.dryRun
+        // Execute the operation
+        const { isDone, result } = await operations(
+          response.name,
+          response.args
         );
+
+        // Return the content from the result
         return {
-          content: [{ type: "text", text: result }],
-        };
-      }
-
-      case "create_directory": {
-        const parsed = CreateDirectoryArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for create_directory: ${parsed.error}`
-          );
-        }
-        const validPath = await validatePath(parsed.data.path);
-        await fs.mkdir(validPath, { recursive: true });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Successfully created directory ${parsed.data.path}`,
-            },
-          ],
-        };
-      }
-
-      case "list_directory": {
-        const parsed = ListDirectoryArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for list_directory: ${parsed.error}`
-          );
-        }
-        const validPath = await validatePath(parsed.data.path);
-        const entries = await fs.readdir(validPath, { withFileTypes: true });
-        const formatted = entries
-          .map(
-            (entry) =>
-              `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`
-          )
-          .join("\n");
-        return {
-          content: [{ type: "text", text: formatted }],
-        };
-      }
-
-      case "directory_tree": {
-        const parsed = DirectoryTreeArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for directory_tree: ${parsed.error}`
-          );
-        }
-
-        interface TreeEntry {
-          name: string;
-          type: "file" | "directory";
-          children?: TreeEntry[];
-        }
-
-        async function buildTree(currentPath: string): Promise<TreeEntry[]> {
-          const validPath = await validatePath(currentPath);
-          const entries = await fs.readdir(validPath, { withFileTypes: true });
-          const result: TreeEntry[] = [];
-
-          for (const entry of entries) {
-            const entryData: TreeEntry = {
-              name: entry.name,
-              type: entry.isDirectory() ? "directory" : "file",
-            };
-
-            if (entry.isDirectory()) {
-              const subPath = path.join(currentPath, entry.name);
-              entryData.children = await buildTree(subPath);
-            }
-
-            result.push(entryData);
-          }
-
-          return result;
-        }
-
-        const treeData = await buildTree(parsed.data.path);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(treeData, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "move_file": {
-        const parsed = MoveFileArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(`Invalid arguments for move_file: ${parsed.error}`);
-        }
-        const validSourcePath = await validatePath(parsed.data.source);
-        const validDestPath = await validatePath(parsed.data.destination);
-        await fs.rename(validSourcePath, validDestPath);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Successfully moved ${parsed.data.source} to ${parsed.data.destination}`,
-            },
-          ],
-        };
-      }
-
-      case "search_files": {
-        const parsed = SearchFilesArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for search_files: ${parsed.error}`
-          );
-        }
-        const validPath = await validatePath(parsed.data.path);
-        const results = await searchFiles(
-          validPath,
-          parsed.data.pattern,
-          parsed.data.excludePatterns
-        );
-        return {
-          content: [
-            {
-              type: "text",
-              text:
-                results.length > 0 ? results.join("\n") : "No matches found",
-            },
-          ],
-        };
-      }
-
-      case "get_file_info": {
-        const parsed = GetFileInfoArgsSchema.safeParse(args);
-        if (!parsed.success) {
-          throw new Error(
-            `Invalid arguments for get_file_info: ${parsed.error}`
-          );
-        }
-        const validPath = await validatePath(parsed.data.path);
-        const info = await getFileStats(validPath);
-        return {
-          content: [
-            {
-              type: "text",
-              text: Object.entries(info)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join("\n"),
-            },
-          ],
-        };
-      }
-
-      case "list_allowed_directories": {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Allowed directories:\n${allowedDirectories.join("\n")}`,
-            },
-          ],
+          content: result.content,
         };
       }
 
@@ -584,3 +368,241 @@ runServer().catch((error) => {
   console.error("Fatal error running server:", error);
   process.exit(1);
 });
+
+interface OperationResult {
+  content: Array<{ type: string; text: string }>;
+  isDone?: boolean;
+}
+
+const operations = async (
+  name: string,
+  args: any
+): Promise<{ isDone: boolean; result: OperationResult }> => {
+  let operationResult: OperationResult;
+
+  switch (name) {
+    case "read_file": {
+      const parsed = ReadFileArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for read_file: ${parsed.error}`);
+      }
+      const validPath = await validatePath(parsed.data.path);
+      const content = await fs.readFile(validPath, "utf-8");
+      operationResult = { content: [{ type: "text", text: content }] };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "read_multiple_files": {
+      const parsed = ReadMultipleFilesArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid arguments for read_multiple_files: ${parsed.error}`
+        );
+      }
+      const results = await Promise.all(
+        parsed.data.paths.map(async (filePath: string) => {
+          try {
+            const validPath = await validatePath(filePath);
+            const content = await fs.readFile(validPath, "utf-8");
+            return `${filePath}:\n${content}\n`;
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            return `${filePath}: Error - ${errorMessage}`;
+          }
+        })
+      );
+      operationResult = {
+        content: [{ type: "text", text: results.join("\n---\n") }],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "write_file": {
+      const parsed = WriteFileArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for write_file: ${parsed.error}`);
+      }
+      const validPath = await validatePath(parsed.data.path);
+      await fs.writeFile(validPath, parsed.data.content, "utf-8");
+      operationResult = {
+        content: [
+          { type: "text", text: `Successfully wrote to ${parsed.data.path}` },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "edit_file": {
+      const parsed = EditFileArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for edit_file: ${parsed.error}`);
+      }
+      const validPath = await validatePath(parsed.data.path);
+      const diffResult = await applyFileEdits(
+        validPath,
+        parsed.data.edits as Array<{ oldText: string; newText: string }>,
+        parsed.data.dryRun
+      );
+      operationResult = { content: [{ type: "text", text: diffResult }] };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "create_directory": {
+      const parsed = CreateDirectoryArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid arguments for create_directory: ${parsed.error}`
+        );
+      }
+      const validPath = await validatePath(parsed.data.path);
+      await fs.mkdir(validPath, { recursive: true });
+      operationResult = {
+        content: [
+          {
+            type: "text",
+            text: `Successfully created directory ${parsed.data.path}`,
+          },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "list_directory": {
+      const parsed = ListDirectoryArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid arguments for list_directory: ${parsed.error}`
+        );
+      }
+      const validPath = await validatePath(parsed.data.path);
+      const entries = await fs.readdir(validPath, { withFileTypes: true });
+      const formatted = entries
+        .map(
+          (entry) => `${entry.isDirectory() ? "[DIR]" : "[FILE]"} ${entry.name}`
+        )
+        .join("\n");
+      operationResult = { content: [{ type: "text", text: formatted }] };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "directory_tree": {
+      const parsed = DirectoryTreeArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(
+          `Invalid arguments for directory_tree: ${parsed.error}`
+        );
+      }
+
+      interface TreeEntry {
+        name: string;
+        type: "file" | "directory";
+        children?: TreeEntry[];
+      }
+
+      async function buildTree(currentPath: string): Promise<TreeEntry[]> {
+        const validPath = await validatePath(currentPath);
+        const entries = await fs.readdir(validPath, { withFileTypes: true });
+        const result: TreeEntry[] = [];
+
+        for (const entry of entries) {
+          const entryData: TreeEntry = {
+            name: entry.name,
+            type: entry.isDirectory() ? "directory" : "file",
+          };
+
+          if (entry.isDirectory()) {
+            const subPath = path.join(currentPath, entry.name);
+            entryData.children = await buildTree(subPath);
+          }
+
+          result.push(entryData);
+        }
+
+        return result;
+      }
+
+      const treeData = await buildTree(parsed.data.path);
+      operationResult = {
+        content: [{ type: "text", text: JSON.stringify(treeData, null, 2) }],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "move_file": {
+      const parsed = MoveFileArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for move_file: ${parsed.error}`);
+      }
+      const validSourcePath = await validatePath(parsed.data.source);
+      const validDestPath = await validatePath(parsed.data.destination);
+      await fs.rename(validSourcePath, validDestPath);
+      operationResult = {
+        content: [
+          {
+            type: "text",
+            text: `Successfully moved ${parsed.data.source} to ${parsed.data.destination}`,
+          },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "search_files": {
+      const parsed = SearchFilesArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for search_files: ${parsed.error}`);
+      }
+      const validPath = await validatePath(parsed.data.path);
+      const results = await searchFiles(
+        validPath,
+        parsed.data.pattern,
+        parsed.data.excludePatterns
+      );
+      operationResult = {
+        content: [
+          {
+            type: "text",
+            text: results.length > 0 ? results.join("\n") : "No matches found",
+          },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "get_file_info": {
+      const parsed = GetFileInfoArgsSchema.safeParse(args);
+      if (!parsed.success) {
+        throw new Error(`Invalid arguments for get_file_info: ${parsed.error}`);
+      }
+      const validPath = await validatePath(parsed.data.path);
+      const info = await getFileStats(validPath);
+      operationResult = {
+        content: [
+          {
+            type: "text",
+            text: Object.entries(info)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join("\n"),
+          },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    case "list_allowed_directories": {
+      operationResult = {
+        content: [
+          {
+            type: "text",
+            text: `Allowed directories:\n${allowedDirectories.join("\n")}`,
+          },
+        ],
+      };
+      return { isDone: true, result: operationResult }; // Operation complete
+    }
+
+    default:
+      throw new Error(`Unknown operation: ${name}`);
+  }
+};

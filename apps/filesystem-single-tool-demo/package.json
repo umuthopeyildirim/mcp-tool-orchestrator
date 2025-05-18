@@ -21,6 +21,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.11.4",
     "@umuthopeyildirim/mcp-tool-definition-optimizer": "workspace:*",
+    "@umuthopeyildirim/orchestrator": "workspace:*",
     "diff": "^8.0.1",
     "glob": "^11.0.2",
     "minimatch": "^10.0.1",
